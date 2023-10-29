@@ -1,6 +1,7 @@
 import numpy as np
 import itertools
 from matplotlib import pyplot as plt
+from sklearn import linear_model
 
 
 def mean_based(c):
@@ -67,8 +68,18 @@ if __name__ == '__main__':
         c_s.append(c)
         print(f"c {c} result {result}")
 
+    lin_reg = linear_model.LinearRegression()
+    lin_reg.fit(np.array(c_s).reshape(-1,1), corrects)
+    m = lin_reg.coef_
+    b = lin_reg.intercept_
 
     plt.scatter(c_s,corrects)
     plt.xlabel("Pace value")
     plt.ylabel("Correct bit predictions")
+    y = m*c_s+b
+    plt.plot(c_s,y)
     plt.show()
+
+
+
+
