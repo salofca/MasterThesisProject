@@ -1,5 +1,4 @@
 import numpy as np
-import itertools
 from matplotlib import pyplot as plt
 from sklearn import linear_model
 
@@ -32,7 +31,7 @@ def mean_based(c):
             else:
                 x_guess.append(0)
 
-        # deleting the traces which their length is different from x
+        # deleting the traces which their bits are different from x
         rows_delete = []
         for i in range(traces.shape[0]):
             t = traces[i, :end]
@@ -46,12 +45,12 @@ def mean_based(c):
         start = end
         end = min(end + int(c * end), n)
 
-    corrects = 0
+    tp = 0
     for (xi, gi) in zip(x, x_guess):
         if xi == gi:
-            corrects += 1
+            tp += 1
 
-    return corrects
+    return tp
 
 
 if __name__ == '__main__':
