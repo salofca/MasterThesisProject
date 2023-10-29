@@ -77,7 +77,7 @@ if __name__ == '__main__':
     plt.xlabel("Pace value")
     plt.ylabel("Correct bit predictions")
     y = m*c_s+b
-    plt.plot(c_s,y)
+    plt.plot(c_s,y,color="red")
     plt.show()
 
 
