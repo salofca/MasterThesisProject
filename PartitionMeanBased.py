@@ -3,12 +3,13 @@ from matplotlib import pyplot as plt
 from sklearn import linear_model
 
 
-def mean_based(c):
+def mean_based(n):
     x_guess = []
     traces = []
     start = 0
     end = n // 2
     del_traces = 0
+
 
     while (end < n) or (start != n):
         traces = list(traces)
@@ -43,41 +44,29 @@ def mean_based(c):
         traces = np.delete(traces, rows_delete, 0)
         del_traces = traces.shape[0]
         start = end
-        end = min(end + int(c * end), n)
+        end = min(end + int(0.01 * end), n)
 
     tp = 0
     for (xi, gi) in zip(x, x_guess):
-        if xi == gi:
-            tp += 1
+        if xi != gi:
+            return 0
 
-    return tp
+    return 1
 
 
 if __name__ == '__main__':
-    n = 256
-    np.random.seed(123)
-    x = np.random.randint(2, size=n)
-    T = round(np.log2(n))
-    corrects = []
-    c_s = []
+    corrects = 0
+    n_s = []
+    for n in range(256,2048,50):
+        x = np.random.randint(2, size=n)
+        T = round(0.5 * n * np.log2(n))
+        result = mean_based(n)
+        corrects += result
+        print(corrects)
+        n_s.append(n)
 
-    for c in np.arange(0.0081,0.1,0.001):
-        result = mean_based(c)
-        corrects.append(result)
-        c_s.append(c)
-        print(f"c {c} result {result}")
+    print(corrects/len(n_s)*100)
 
-    lin_reg = linear_model.LinearRegression()
-    lin_reg.fit(np.array(c_s).reshape(-1,1), corrects)
-    m = lin_reg.coef_
-    b = lin_reg.intercept_
-
-    plt.scatter(c_s,corrects)
-    plt.xlabel("Pace value")
-    plt.ylabel("Correct bit predictions")
-    y = m*c_s+b
-    plt.plot(c_s,y,color="red")
-    plt.show()
 
 
 
