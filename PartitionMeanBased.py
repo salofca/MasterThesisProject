@@ -2,18 +2,18 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn import linear_model
 
-
-def mean_based(n):
-    x_guess = []
+PACE = 0.064
+C = 2
+def mean_based(n, T):
+    x_pred = []
     traces = []
     start = 0
     end = n // 2
-    del_traces = 0
-
+    remain_traces = 0
 
     while (end < n) or (start != n):
         traces = list(traces)
-        for i in range(T - del_traces):
+        for i in range(T - remain_traces):
             k = int(np.random.uniform(0, n))
             if k != 0:
                 trace = x[:-k]
@@ -28,9 +28,9 @@ def mean_based(n):
         for j in range(start, end):
             mean_y_x = np.mean(traces[:, j], axis=0)
             if mean_y_x >= 0.5:
-                x_guess.append(1)
+                x_pred.append(1)
             else:
-                x_guess.append(0)
+                x_pred.append(0)
 
         # deleting the traces which their bits are different from x
         rows_delete = []
@@ -42,12 +42,12 @@ def mean_based(n):
                     break
 
         traces = np.delete(traces, rows_delete, 0)
-        del_traces = traces.shape[0]
+        remain_traces = traces.shape[0]
         start = end
-        end = min(end + int(0.01 * end), n)
+        end = min(end + int(PACE * end), n)
 
-    tp = 0
-    for (xi, gi) in zip(x, x_guess):
+
+    for (xi, gi) in zip(x, x_pred):
         if xi != gi:
             return 0
 
@@ -57,17 +57,20 @@ def mean_based(n):
 if __name__ == '__main__':
     corrects = 0
     n_s = []
-    for n in range(256,2048,50):
+    avg_error_n = []
+    for n in range(256,1024,64):
         x = np.random.randint(2, size=n)
-        T = round(0.5 * n * np.log2(n))
-        result = mean_based(n)
+        T = int(C * n * np.log2(n))
+        result = mean_based(n, T)
         corrects += result
-        print(corrects)
         n_s.append(n)
+        avg_error_n.append(1 - (corrects / len(n_s)))
+        print(1 - (corrects / len(n_s)))
 
-    print(corrects/len(n_s)*100)
-
-
+    plt.plot(n_s, avg_error_n)
+    plt.xlabel("Input Length (n)")
+    plt.ylabel("Average Error (e)")
+    plt.show()
 
 
 
