@@ -2,8 +2,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn import linear_model
 
-PACE = 0.064
-C = 2
+PACE = 0.25
+C = 3
+
+
 def mean_based(n, T):
     x_pred = []
     traces = []
@@ -46,7 +48,6 @@ def mean_based(n, T):
         start = end
         end = min(end + int(PACE * end), n)
 
-
     for (xi, gi) in zip(x, x_pred):
         if xi != gi:
             return 0
@@ -58,19 +59,17 @@ if __name__ == '__main__':
     corrects = 0
     n_s = []
     avg_error_n = []
-    for n in range(256,1024,64):
+    for n in range(256, 2048, 64):
         x = np.random.randint(2, size=n)
         T = int(C * n * np.log2(n))
         result = mean_based(n, T)
         corrects += result
         n_s.append(n)
         avg_error_n.append(1 - (corrects / len(n_s)))
-        print(1 - (corrects / len(n_s)))
+        print((1 - (corrects / len(n_s))))
 
     plt.plot(n_s, avg_error_n)
     plt.xlabel("Input Length (n)")
     plt.ylabel("Average Error (\u03B5)")
+    plt.savefig("MeanBasedPartitionsAvgError")
     plt.show()
-
-
-

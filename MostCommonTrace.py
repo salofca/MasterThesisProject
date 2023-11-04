@@ -14,7 +14,7 @@ def most_common_array(arrays):
     return most_common[0][0]
 
 
-def are_traces_equal(x, x_pred):
+def are_strings_equal(x, x_pred):
     for (xi, gi) in zip(x, x_pred):
         if xi != gi:
             return 0
@@ -26,7 +26,7 @@ n_s = []
 avg_error = []
 for n in range(256, 2048, 64):
     x = np.random.randint(2, size=n)
-    T = int(1.2 * n * np.log2(n))
+    T = int(0.6 * n * np.log2(n))
     x_pred = []
     traces = []
     for i in range(T):
@@ -42,11 +42,12 @@ for n in range(256, 2048, 64):
     # Find the most common binary string
     x_pred = np.asarray(most_common_array(traces))
     # Output the result
-    correct += are_traces_equal(x, x_pred)
+    correct += are_strings_equal(x, x_pred)
     n_s.append(n)
     avg_error.append((1 - (correct / len(n_s))))
 
 plt.plot(n_s, avg_error)
 plt.xlabel("Input Length (n)")
 plt.ylabel("Average Error (\u03B5)")
+plt.savefig("MostCommonTraceAvgError")
 plt.show()
