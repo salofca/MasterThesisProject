@@ -15,7 +15,7 @@ def mean_based(n, T):
 
     while (end < n) or (start != n):
         traces = list(traces)
-        for i in range(T - remain_traces):
+        for i in range(T - remain_traces):  # Trace generation
             k = int(np.random.uniform(0, n))
             if k != 0:
                 trace = x[:-k]
@@ -27,7 +27,7 @@ def mean_based(n, T):
 
         traces = np.vstack(traces)  # stacking the traces all together
 
-        for j in range(start, end):
+        for j in range(start, end):  # Applying mean-based
             mean_y_x = np.mean(traces[:, j], axis=0)
             if mean_y_x >= 0.5:
                 x_pred.append(1)
@@ -48,7 +48,7 @@ def mean_based(n, T):
         start = end
         end = min(end + int(PACE * end), n)
 
-    for (xi, gi) in zip(x, x_pred):
+    for (xi, gi) in zip(x, x_pred):  # comparing x with the predicted string
         if xi != gi:
             return 0
 
@@ -59,16 +59,15 @@ if __name__ == '__main__':
     corrects = 0
     n_s = []
     avg_error_n = []
-    for n in range(256, 2048, 64):
+    for n in range(256, 2048, 64): # Applying mean-based over a sequence of n
         x = np.random.randint(2, size=n)
         T = int(C * n * np.log2(n))
         result = mean_based(n, T)
         corrects += result
         n_s.append(n)
         avg_error_n.append(1 - (corrects / len(n_s)))
-        print((1 - (corrects / len(n_s))))
 
-    plt.plot(n_s, avg_error_n)
+    plt.plot(n_s, avg_error_n) # plot of the avg error as function of n
     plt.xlabel("Input Length (n)")
     plt.ylabel("Average Error (\u03B5)")
     plt.savefig("MeanBasedPartitionsAvgError")

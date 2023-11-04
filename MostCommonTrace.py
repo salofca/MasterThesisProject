@@ -14,6 +14,11 @@ def most_common_array(arrays):
     return most_common[0][0]
 
 
+"""
+Verifies if the predicted and the original string are the same
+"""
+
+
 def are_strings_equal(x, x_pred):
     for (xi, gi) in zip(x, x_pred):
         if xi != gi:
@@ -46,7 +51,8 @@ for n in range(256, 2048, 64):
     n_s.append(n)
     avg_error.append((1 - (correct / len(n_s))))
 
-plt.plot(n_s, avg_error)
+
+plt.plot(n_s, avg_error) # plot of the avg error as function of n
 plt.xlabel("Input Length (n)")
 plt.ylabel("Average Error (\u03B5)")
 plt.savefig("MostCommonTraceAvgError")
