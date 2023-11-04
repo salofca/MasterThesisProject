@@ -1,6 +1,7 @@
 from collections import Counter
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 """
 Auxiliary function which finds the most common element on an array
@@ -22,9 +23,10 @@ def are_traces_equal(x, x_pred):
 
 correct = 0
 n_s = []
-for n in range(256, 4096, 64):
+avg_error = []
+for n in range(256, 2048, 64):
     x = np.random.randint(2, size=n)
-    T = int(1 * n * np.log2(n))
+    T = int(1.2 * n * np.log2(n))
     x_pred = []
     traces = []
     for i in range(T):
@@ -40,8 +42,11 @@ for n in range(256, 4096, 64):
     # Find the most common binary string
     x_pred = np.asarray(most_common_array(traces))
     # Output the result
-
-    correct += are_traces_equal(x,x_pred)
+    correct += are_traces_equal(x, x_pred)
     n_s.append(n)
-    print(correct)
-print(1 - (correct / len(n_s)))
+    avg_error.append((1 - (correct / len(n_s))))
+
+plt.plot(n_s, avg_error)
+plt.xlabel("Input Length (n)")
+plt.ylabel("Average Error (\u03B5)")
+plt.show()

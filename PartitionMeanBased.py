@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     plt.plot(n_s, avg_error_n)
     plt.xlabel("Input Length (n)")
-    plt.ylabel("Average Error (e)")
+    plt.ylabel("Average Error (\u03B5)")
     plt.show()
 
 
