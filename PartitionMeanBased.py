@@ -7,11 +7,21 @@ import time
 from joblib import Parallel, delayed
 
 PACE = 0.5
-C = 1000
+C = 10
 THRESHOLD = 100
 MIN_DIFF = 0.7
-ERROR = 20
-MUT_PROB = 0.25
+ERROR = 10
+MUT_PROB = 0.33
+
+
+def generate_traces(i, k, traces,mutation, n):
+    traces[i, :n - k] = x[:n - k]
+    if mutation:
+        for j in range(n - k):
+            if random.random() <= MUT_PROB:
+                traces[i, j] = 1 - traces[i, j]
+    traces[i, n - k:] = np.random.randint(2, size=k)
+    return traces
 
 
 def mean_based(x, n, T, mutation=False):
@@ -31,22 +41,10 @@ def mean_based(x, n, T, mutation=False):
         k_values = np.random.randint(n + 1, size=T - remaining_traces)
         if len(rows_delete) > 0:
             for (i, k) in zip(rows_delete, k_values):
-                traces[i, :n - k] = x[:n - k]
-                if mutation:
-                    for j in range(n-k):
-                        if random.random() <= MUT_PROB:
-                            traces[i,j] = 1 - traces[i,j]
-                traces[i, n - k:] = np.random.randint(2, size=k)
-
+                traces = generate_traces(i, k, traces,mutation, n)
         else:
             for i, k in enumerate(k_values):
-                traces[i, :n - k] = x[:n - k]
-                if mutation:
-                    for j in range(n - k):
-                        if random.random() <= MUT_PROB:
-                            traces[i, j] = 1 - traces[i, j]
-                traces[i, n - k:] = np.random.randint(2, size=k)
-
+                traces = generate_traces(i,k,traces,mutation,n)
         # stacking the traces all together
 
         if n - start <= threshold:
@@ -59,21 +57,17 @@ def mean_based(x, n, T, mutation=False):
 
         rows_delete = []
         if not mutation:
-            for i in range(traces.shape[0]):
-                t = traces[i, :end]
-                for (xi, ti) in zip(x_pred[:end], t):
-                    if xi != ti:
-                        rows_delete.append(i)
-                        traces[i, :] = 0
-                        break
+            mask = (x_pred[:end] != traces[:, :end]).any(axis=1)
+            traces[mask, :] = 0
+            rows_delete = np.where(mask)[0]
         else:
             for i in range(traces.shape[0]):
                 t = traces[i, :end]
                 # Find the absolute difference between the two arrays
-                diff = np.abs(t - x[:end])
+                diff = np.abs(t - x_pred[:end])
                 # Count the number of non-zero elements in the difference array
                 diff_bits = np.count_nonzero(diff)
-                if diff_bits <= MIN_DIFF * len(x[:end]) + ERROR:
+                if diff_bits <= (MUT_PROB+ERROR) * len(x_pred[:end]):
                     rows_delete.append(i)
 
         remaining_traces = traces.shape[0] - len(rows_delete)
@@ -94,14 +88,16 @@ if __name__ == '__main__':
     target_x = []
     T = 0
 
-    for n in range(64, 1024, 128):  # Applying mean-based over a sequence of n
+    for n in range(64, 1024, 250):  # Applying mean-based over a sequence of n
         corrects = 0
         error = 0
         x = [random.choice([0, 1]) for _ in range(n)]
-        T = round(5 * n * np.log2(n) ** 2)
-        results = Parallel(n_jobs=-1)(delayed(mean_based)(x, n, T, True) for _ in range(500))
-        error = sum(results) / 500
-        print(results)
+        T = round(C * n * np.log2(n) ** 2)
+        ti = time.time()
+        results = Parallel(n_jobs=14)(delayed(mean_based)(x, n, T, True) for _ in range(300))
+        tf = time.time()
+        print(tf-ti)
+        error = sum(results) / 300
         n_s.append(n)
         avg_error_n.append(error)
         print(f"{n} error: {error}")
@@ -117,5 +113,5 @@ if __name__ == '__main__':
     plt.legend(["Estimated Average Error", "Worst Case Error"])
     plt.xlabel("Input Length (n)")
     plt.ylabel("Probability Error (\u03B5)")
-    plt.savefig(f"TrimmSuffixMutation T = {T}")
+    plt.savefig(f"TrimmSuffixMutatione033")
     plt.show()
