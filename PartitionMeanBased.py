@@ -45,15 +45,11 @@ def mean_based(x, n, T, mutation=False):
         else:
             for i, k in enumerate(k_values):
                 traces = generate_traces(i,k,traces,mutation,n)
-        # stacking the traces all together
-
         if n - start <= threshold:
             end = n
 
         mean_y_x = np.mean(traces[:, start:end], axis=0)
         x_pred.extend((mean_y_x >= 0.5).astype(int))
-
-        # deleting the traces which their bits are different from x
 
         rows_delete = []
         if not mutation:
@@ -67,7 +63,7 @@ def mean_based(x, n, T, mutation=False):
                 diff = np.abs(t - x_pred[:end])
                 # Count the number of non-zero elements in the difference array
                 diff_bits = np.count_nonzero(diff)
-                if diff_bits <= (MUT_PROB+ERROR) * len(x_pred[:end]):
+                if diff_bits >= (MUT_PROB+ERROR) * len(x_pred[:end]):
                     rows_delete.append(i)
 
         remaining_traces = traces.shape[0] - len(rows_delete)
