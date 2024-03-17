@@ -5,16 +5,16 @@ from matplotlib import pyplot as plt
 import random
 import time
 from joblib import Parallel, delayed
+import random
 
 PACE = 0.5
-C = 10
-THRESHOLD = 100
-MIN_DIFF = 0.7
-ERROR = 10
+C = 20
+THRESHOLD = 10
+ERROR = 1 / 4
 MUT_PROB = 0.33
 
 
-def generate_traces(i, k, traces,mutation, n):
+def generate_traces(i, k, traces, mutation, n):
     traces[i, :n - k] = x[:n - k]
     if mutation:
         for j in range(n - k):
@@ -26,32 +26,25 @@ def generate_traces(i, k, traces,mutation, n):
 
 def mean_based(x, n, T, mutation=False):
     x_pred = []
-    traces = []
     start = 0
     end = n // 2
-    remaining_traces = 0
-    epsilon = 0
-    seen_part = 0
-    threshold = 0
-    rows_delete = []
+    threshold = int(20 * np.log2(n))
+
 
     traces = np.zeros((T, n), dtype=int)
-    while (end < n) or (start != n):
+    k_values = np.random.randint(n + 1, size=T)
+    for i, k in enumerate(k_values):
+        traces = generate_traces(i, k, traces, mutation, n)
 
-        k_values = np.random.randint(n + 1, size=T - remaining_traces)
-        if len(rows_delete) > 0:
-            for (i, k) in zip(rows_delete, k_values):
-                traces = generate_traces(i, k, traces,mutation, n)
-        else:
-            for i, k in enumerate(k_values):
-                traces = generate_traces(i,k,traces,mutation,n)
+
+    while (end < n) or (start != n):
         if n - start <= threshold:
             end = n
 
-        mean_y_x = np.mean(traces[:, start:end], axis=0)
+
+        mean_y_x = np.mean(traces[:,start:end], axis=0)
         x_pred.extend((mean_y_x >= 0.5).astype(int))
 
-        rows_delete = []
         if not mutation:
             mask = (x_pred[:end] != traces[:, :end]).any(axis=1)
             traces[mask, :] = 0
@@ -64,15 +57,12 @@ def mean_based(x, n, T, mutation=False):
                 # Count the number of non-zero elements in the difference array
                 diff_bits = np.count_nonzero(diff)
                 if diff_bits >= (MUT_PROB+ERROR) * len(x_pred[:end]):
-                    rows_delete.append(i)
-
-        remaining_traces = traces.shape[0] - len(rows_delete)
-        seen_part = end - start
+                    np.delete(traces, i, axis=0)
         start = end
-        end = min(end + int(PACE * end), n)
-        threshold = MUT_PROB * seen_part + C * np.sqrt(seen_part * np.log2(seen_part))
+        end = min(int((end + n) * 0.5), n)
 
-    errors = np.mean(x != np.array(x_pred))
+    errors = sum([1 if x[i] != x_pred[i] else 0 for i in range(n)]) / n
+    print(errors)
     return errors
 
 
@@ -86,14 +76,11 @@ if __name__ == '__main__':
 
     for n in range(64, 1024, 250):  # Applying mean-based over a sequence of n
         corrects = 0
-        error = 0
         x = [random.choice([0, 1]) for _ in range(n)]
         T = round(C * n * np.log2(n) ** 2)
-        ti = time.time()
-        results = Parallel(n_jobs=14)(delayed(mean_based)(x, n, T, True) for _ in range(100))
-        tf = time.time()
-        print(tf-ti)
-        error = sum(results) / 100
+        result = 0
+        results = Parallel(n_jobs=14)(delayed(mean_based)(x, n, T, True) for _ in range(10))
+        error = sum(results) / 10
         n_s.append(n)
         avg_error_n.append(error)
         print(f"{n} error: {error}")
