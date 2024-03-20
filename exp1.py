@@ -83,14 +83,15 @@ def genetic_algorithm(x, T, e):
 # Let's start the algorithm
 if __name__ == '__main__':
 
-    n_s = []
-    errors = []
+    n_s = [64,128,256,512,1024]
+    errors = np.zeros(shape=(5, 4))
     target_x = []
     target_y = []
-
     n = 64
+    i = 0
     for _ in range(n, 512, n * 2):
         for e in np.arange(0.1, 0.5, 0.1):
+            j = 0
             x = [randint(0, 1) for _ in range(n)]
             T = int(10 / (0.5 - e) * n * np.log2(n))
             error = Parallel(n_jobs=-1)(
@@ -98,19 +99,25 @@ if __name__ == '__main__':
                                                                    ))
             error = sum(error) / 24
             print(f"The average error for n = {n} and error = {e} is {error}")
-            n_s.append(n)
-            errors.append(error)
+            errors[i, j] = e
+            j += 1
+        i += 1
+        n_s.append(n)
         n *= 2
 
-    for i in range(64, 1025):
-        target_x.append(i)
-        target_y.append(1 / i)
 
-    plt.plot(n_s, errors, marker="o")
-    plt.plot(target_x, target_y)
-    plt.title("Error estimation With Mutations")
-    plt.legend(["Estimated Average Error", "Worst Case Error"])
-    plt.xlabel("Input Length (n)")
-    plt.ylabel("Probability Error (\u03B5)")
-    plt.savefig(f"GeneticAlgorithme033300generationsT10nlogn")
-    plt.show()
+
+    for i in range(5):
+        e = 0.1
+        plt.plot(n_s, errors[i,:], marker="o")
+        plt.plot(target_x, target_y)
+        plt.title(f"Error estimation With Mutations e={0.1}")
+        plt.legend(["Estimated Average Error", "Worst Case Error"])
+        plt.xlabel("Input Length (n)")
+        plt.ylabel("Probability Error (\u03B5)")
+        plt.savefig(f"GeneticAlgorithme={i}")
+        plt.show()
+        e+=0.2
+
+
+
