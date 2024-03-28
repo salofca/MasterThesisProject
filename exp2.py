@@ -16,14 +16,14 @@ def fitness_function(ga, solution, ix_solution):
 
 
 # generate population
-def generate_population(x, T):
+def generate_population(x, T, e):
     pop = []
     k_values = np.random.randint(len(x) + 1, size=T)
     for k in k_values:
         if k != 0:
             individual = x[:-k]
             for i in range(len(individual)):
-                if rand() < MUT_RATE:
+                if rand() < e:
                     individual[i] = 1 - individual[i]
             suff = [randint(0, 1) for _ in range(k)]
             individual.extend(suff)
@@ -31,10 +31,28 @@ def generate_population(x, T):
         else:
             individual = x.copy()
             for i in range(len(x)):
-                if rand() < MUT_RATE:
+                if rand() < e:
                     individual[i] = 1 - individual[i]
             pop.append(individual)
     return pop
+
+def generate_population_deletion(x,T):
+    pop = []
+    k_values = np.random.randint(len(x) + 1, size=T)
+    for k in k_values:
+        if k != 0:
+            individual = x[:-k]
+            suff = [randint(0,1) for _ in range(np.random.randint(0,k))]
+            if len(suff) < k:
+                padding = np.zeros((k - len(suff)))
+                suff.extend(padding)
+            individual.extend(suff)
+        else:
+            individual = x.copy()
+        pop.append(individual)
+    return pop
+                
+
 
 
 def callback_function(ga):
@@ -51,7 +69,7 @@ def callback_function(ga):
 # genetic algorithm
 
 def genetic_algorithm(x, T):
-    initial_population = generate_population(x, T)
+    initial_population = generate_population_deletion(x, T)
     global avg_pop
 
     avg_pop = np.mean(initial_population, axis=0)
@@ -88,35 +106,31 @@ if __name__ == '__main__':
     target_y = []
     n = 64
     i = 0
-    while n < 1025:
-            j = 0
+    while n < 512:
             x = [randint(0, 1) for _ in range(n)]
-            T = int(n * np.log2(n))
+            T = int(10*n**2*np.log(n))
             error = Parallel(n_jobs=10)(
                 delayed(genetic_algorithm)(x, T) for _ in range(24
                                                                    ))
-            error = sum(error) / 24
-            print(f"The average error for n = {n}  is {error}")
-            #errors[i, j] = e
-            #j += 1
-        #i += 1
+            print(f"The average error for n = {n} is {error}")
             n_s.append(n)
             errors.append(error)
-            n*=2
+            n *= 2
 
     for i in range(64, 1025):
         target_x.append(i)
         target_y.append(1 / i)
 
+
+
     plt.plot(n_s, errors, marker="o")
     plt.plot(target_x, target_y)
-    plt.title(f"Error estimation With Mutations T=nlogn")
+    plt.title(f"Error estimation With Mutations")
     plt.legend(["Estimated Average Error", "Worst Case Error"])
     plt.xlabel("Input Length (n)")
     plt.ylabel("Probability Error (\u03B5)")
-    plt.savefig(f"GeneticAlgorithmnlogn")
+    plt.savefig(f"GeneticAlgorithmeSuffixless")
     plt.show()
-
 
 
 

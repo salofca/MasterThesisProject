@@ -7,8 +7,8 @@ from joblib import Parallel, delayed
 import random
 
 PACE = 0.5
-C = 30
-THRESHOLD = 10
+C = 20
+THRESHOLD = 20
 ERROR = 1 / 4
 MUT_PROB = 0.33
 
@@ -27,7 +27,7 @@ def mean_based(x, n, T, mutation=False):
     x_pred = []
     start = 0
     end = n // 2
-    threshold = int(30 * np.log2(n))
+    threshold = int(C * np.log2(n))
 
 
     traces = np.zeros((T, n), dtype=int)
@@ -54,7 +54,7 @@ def mean_based(x, n, T, mutation=False):
                 diff = np.abs(t - x_pred[:end])
                 # Count the number of non-zero elements in the difference array
                 diff_bits = np.count_nonzero(diff)
-                if diff_bits >= (MUT_PROB+ERROR) * len(x_pred[start:end]):
+                if diff_bits >= (MUT_PROB+ERROR) * len(x_pred[:end]):
                     np.delete(traces, i, axis=0)
         start = end
         end = min(int((end + n) * 0.5), n)
@@ -72,11 +72,11 @@ if __name__ == '__main__':
     target_x = []
 
     n = 64
-    for _ in range(n, 1024, n * 2):
+    while n < 1025:
         x = [random.choice([0, 1]) for _ in range(n)]
-        T = round(C * n * np.log2(n) ** 2)
-        results = Parallel(n_jobs=14)(delayed(mean_based)(x, n, T, True) for _ in range(300))
-        error = sum(results) / 300
+        T = round(C* n * np.log2(n) ** 2)
+        results = Parallel(n_jobs=13)(delayed(mean_based)(x, n, T, True) for _ in range(30))
+        error = sum(results) / 30
         n_s.append(n)
         avg_error_n.append(error)
         print(f"{n} error: {error}")
@@ -94,5 +94,5 @@ if __name__ == '__main__':
     plt.legend(["Estimated Average Error", "Worst Case Error"])
     plt.xlabel("Input Length (n)")
     plt.ylabel("Probability Error (\u03B5)")
-    plt.savefig(f"TrimmSuffixMutation")
+    plt.savefig(f"TrimmSuffixMutation20nlogn")
     plt.show()
